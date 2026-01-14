@@ -79,21 +79,24 @@ public class Main {
                         // CAMINHO 1: Prioridade Esquerda -> ((a . b) . c) . d
                         double res1 = operar(operar(operar(a, b, op1), c, op2), d, op3);
                         if (is10(res1)) {
-                            solucoes.add(formatarEsquerda(a, b, c, d, op1, op2, op3));
+                            String s = formatarEsquerda(a, b, c, d, op1, op2, op3);
+                            if (s != null) solucoes.add(s);
                         }
 
                         // CAMINHO 2: Prioridade Meio -> a . (b . c) . d
                         double meio = operar(b, c, op2);
                         double res2 = operar(operar(a, meio, op1), d, op3);
                         if (is10(res2)) {
-                            solucoes.add(formatarMeio(a, b, c, d, op1, op2, op3));
+                            String s = formatarMeio(a, b, c, d, op1, op2, op3);
+                            if (s != null) solucoes.add(s);
                         }
 
                         // CAMINHO 3: Prioridade Direita -> a . b . (c . d)
                         double fim = operar(c, d, op3);
                         double res3 = operar(operar(a, b, op1), fim, op2);
                         if (is10(res3)) {
-                            solucoes.add(formatarDireita(a, b, c, d, op1, op2, op3));
+                            String s = formatarDireita(a, b, c, d, op1, op2, op3);
+                            if (s != null) solucoes.add(s);
                         }
                     }
                 }
@@ -115,6 +118,9 @@ public class Main {
         for (String s : listaFinal) {
             System.out.println(s);
         }
+
+        System.out.println("\nProcesso finalizado. Pressione ENTER para sair...");
+        scanner.nextLine();
     }
 
     /* --- LÓGICA MATEMÁTICA --- */
@@ -171,13 +177,20 @@ public class Main {
     private static String formatarEsquerda(double a, double b,
                                            double c, double  d,
                                            Op o1, Op o2, Op o3) {
+        // Verifica lógica antes de montar
+        boolean pInterno = precisaParenteses(o1, o2, false);
+        boolean pExterno = precisaParenteses(o2, o3, false);
+
+        // Se precisar dos dois, cancela (regra de max 1 parêntese)
+        if (pInterno && pExterno) return null;
+
         // (A op1 B) está á Esquerda de op2
         String p1 = String.format("%d %c %d", (int)a, o1.symbol, (int)b);
-        if (precisaParenteses(o1,o2,false)) p1 = "(" + p1 + ")";
+        if (pInterno) p1 = "(" + p1 + ")";
 
         // (Resultado[p1] op2 C) está à esquerda de op3
         String p2 = String.format("%s %c %d", p1, o2.symbol, (int)c);
-        if(precisaParenteses(o2, o3, false)) p2 = "(" + p2 + ")";
+        if(pExterno) p2 = "(" + p2 + ")";
 
         return String.format("%s %c %d", p2, o3.symbol, (int)d);
     }
@@ -186,21 +199,25 @@ public class Main {
     private static String formatarMeio(double a, double b,
                                        double c, double d,
                                        Op o1, Op o2, Op o3) {
-        String meio = String.format("%d %c %d", (int)b, o2.symbol, (int)c);
-
         // O grupo do meio (B op2 C) interage com DOIS operadores:
-        // Ele está à direita de o1
-        boolean pEsquerda = precisaParenteses(o2, o1, true);
-        // Ele está à esquerda de o3
-        boolean pDireita = precisaParenteses(o2, o3, false);
+        boolean pEsquerda = precisaParenteses(o2, o1, true); // Dir de o1
+        boolean pDireita = precisaParenteses(o2, o3, false); // Esq de o3
+        boolean precisaMeio = pEsquerda || pDireita;
 
-        if(pEsquerda || pDireita) meio = "(" + meio + ")";
+        // Verifica se a esquerda global precisa proteger contra o fim
+        boolean precisaGlobal = precisaParenteses(o1, o3, false);
+
+        // Se precisar proteger o meio E o global, cancela
+        if (precisaMeio && precisaGlobal) return null;
+
+        String meio = String.format("%d %c %d", (int)b, o2.symbol, (int)c);
+        if(precisaMeio) meio = "(" + meio + ")";
 
         //Contruindo a parte da esquerda: A op1 (meio)
         String parteEsquerda = String.format("%d %c %s", (int)a,
                 o1.symbol, meio);
 
-        if(precisaParenteses(o1, o3, false)) {
+        if(precisaGlobal) {
             parteEsquerda = "(" + parteEsquerda + ")";
         }
 
@@ -212,14 +229,20 @@ public class Main {
     private static String formatarDireita(double a, double b,
                                           double c, double d,
                                           Op o1, Op o2, Op o3) {
+        boolean pFim = precisaParenteses(o3, o2, true);
+        boolean pInicio = precisaParenteses(o1, o2, false);
+
+        // Se precisar proteger inicio E fim, temos parenteses disjuntos (A+B)*(C+D) -> cancela
+        if (pInicio && pFim) return null;
+
         // (C op3 D) está à Direita de op2
         String fim = String.format("%d %c %d", (int)c, o3.symbol, (int)d);
-        if (precisaParenteses(o3, o2, true)) fim = "(" + fim + ")";
+        if (pFim) fim = "(" + fim + ")";
 
         // (A op1 B) está à Esquerda de op2
         String inicio = String.format("%d %c %d", (int)a, o1.symbol,
                 (int)b);
-        if (precisaParenteses(o1, o2, false)) inicio = "(" + inicio + ")";
+        if (pInicio) inicio = "(" + inicio + ")";
 
         return String.format("%s %c %s", inicio, o2.symbol, fim);
     }
