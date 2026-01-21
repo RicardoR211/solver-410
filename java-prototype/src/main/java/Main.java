@@ -160,7 +160,7 @@ public class Main {
         if(isDireita) {
             //Se fora é Menos, e dentro é Menos ou Maios -> protege
             // Ex: 10 - (2 + 3) ou 10 - (5 - 2)
-            if (opFora == Op.SUB && (opDentro == Op.ADD || opDentro == Op.SUB)) {
+            if (opFora == Op.SUB && dentroFraco) {
                 return true;
             }
             //Se fora é Dividir, e dentro é Dividir ou Multiplicar -> protege.
