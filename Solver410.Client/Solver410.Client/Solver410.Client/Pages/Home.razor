@@ -1,0 +1,351 @@
+﻿@page "/"
+@using Solver410.Client
+@using System.Linq
+@inject IJSRuntime JS
+
+<PageTitle>Solver 4=10</PageTitle>
+
+<div class="main-container">
+    <div class="card">
+        <h1>Solver 4=10</h1>
+        <p class="subtitle">Insira os 4 dígitos e configure as regras.</p>
+
+        <div class="input-group">
+            <input type="text" @bind="s1" class="num-box" placeholder="0" maxlength="1" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+            <input type="text" @bind="s2" class="num-box" placeholder="0" maxlength="1" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+            <input type="text" @bind="s3" class="num-box" placeholder="0" maxlength="1" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+            <input type="text" @bind="s4" class="num-box" placeholder="0" maxlength="1" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+        </div>
+
+        <div class="chips-container">
+            <label class="chip">
+                <input type="checkbox" @bind="useAdd" />
+                <span class="chip-content">➕ Somar</span>
+            </label>
+            <label class="chip">
+                <input type="checkbox" @bind="useSub" />
+                <span class="chip-content">➖ Subtrair</span>
+            </label>
+            <label class="chip">
+                <input type="checkbox" @bind="useMul" />
+                <span class="chip-content">✖️ Multiplicar</span>
+            </label>
+            <label class="chip">
+                <input type="checkbox" @bind="useDiv" />
+                <span class="chip-content">➗ Dividir</span>
+            </label>
+        </div>
+
+        <div class="special-option">
+            <label class="chip chip-wide">
+                <input type="checkbox" @bind="allowParens" />
+                <span class="chip-content">Permitir Parênteses ( )</span>
+            </label>
+        </div>
+
+        <button class="btn-solve" @onclick="Calcular">
+            🔍 Encontrar Soluções
+        </button>
+
+        @if (solucoesExibidas != null && solucoesExibidas.Count > 0)
+        {
+            <div class="results-area">
+                <h3>@solucoesExibidas.Count soluções encontradas:</h3>
+                <p class="hint-text">(Clique na solução para copiar)</p>
+
+                <ul class="solution-list">
+                    @foreach (var s in solucoesExibidas)
+                    {
+                        <li @onclick="() => CopiarParaClipboard(s)" class="result-item">
+                            <span class="math-text">@s</span>
+                            @if (ultimoCopiado == s)
+                            {
+                                <div class="copied-overlay">Copiado! ✨</div>
+                            }
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+        else if (buscou)
+        {
+            <div class="no-results">
+                <p>🚫 Nenhuma solução encontrada com essas regras.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .main-container {
+        display: flex;
+        justify-content: center;
+        padding: 40px 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #121212;
+        min-height: 100vh;
+        color: #e0e0e0;
+    }
+
+    .card {
+        background: #1e1e1e;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+        border: 1px solid #333;
+    }
+
+    h1 {
+        color: #ffffff;
+        margin-bottom: 5px;
+    }
+
+    .subtitle {
+        color: #aaaaaa;
+        margin-bottom: 25px;
+    }
+
+    .input-group {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 25px;
+    }
+
+    .num-box {
+        width: 70px;
+        height: 70px;
+        font-size: 28px;
+        text-align: center;
+        background-color: #2d2d2d;
+        color: #fff;
+        border: 2px solid #444;
+        border-radius: 12px;
+        transition: border-color 0.2s;
+    }
+
+        .num-box:focus {
+            border-color: #4da6ff;
+            outline: none;
+            background-color: #363636;
+        }
+
+    .chips-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+    }
+
+    .chip {
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+    }
+
+        .chip input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+    .chip-content {
+        display: inline-block;
+        padding: 8px 16px;
+        background-color: #2d2d2d;
+        color: #888;
+        border: 2px solid #444;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+
+    .chip:hover .chip-content {
+        border-color: #666;
+        color: #ccc;
+    }
+
+    .chip input:checked + .chip-content {
+        background-color: #004e8c;
+        border-color: #4da6ff;
+        color: #ffffff;
+        box-shadow: 0 0 8px rgba(77, 166, 255, 0.4);
+    }
+
+    .chip-wide .chip-content {
+        padding: 8px 25px;
+        width: 100%;
+    }
+
+    .special-option {
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .btn-solve {
+        background-color: #0078d4;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 18px;
+        font-weight: 600;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.2s;
+    }
+
+        .btn-solve:hover {
+            background-color: #0063b1;
+        }
+
+        .btn-solve:active {
+            transform: scale(0.98);
+        }
+
+    .results-area {
+        margin-top: 30px;
+        text-align: center;
+    }
+
+        .results-area h3 {
+            font-size: 16px;
+            color: #4da6ff;
+            margin-bottom: 5px;
+        }
+
+    .hint-text {
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 15px;
+        font-style: italic;
+    }
+
+    .solution-list {
+        list-style: none;
+        padding: 0;
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #333;
+        border-radius: 8px;
+        background-color: #181818;
+    }
+
+        .solution-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .solution-list::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+
+        .solution-list::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+
+    .no-results {
+        margin-top: 25px;
+        padding: 15px;
+        background-color: #2d1a1a;
+        border-radius: 8px;
+        color: #ff6b6b;
+        border: 1px solid #4a1b1b;
+    }
+
+    .result-item {
+        position: relative;
+        background: #252526;
+        border-bottom: 1px solid #333;
+        padding: 12px 15px;
+        font-family: 'Consolas', monospace;
+        font-size: 18px;
+        color: #e0e0e0;
+        text-align: center;
+        cursor: pointer;
+        overflow: hidden;
+    }
+
+        .result-item:hover {
+            background-color: #333;
+        }
+
+    .copied-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #252526;
+        color: #4cc9f0;
+        font-weight: bold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        animation: smoothFade 1.5s forwards;
+    }
+
+    @@keyframes smoothFade {
+        0% {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        15% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        85% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        100% {
+            opacity: 0;
+            transform: scale(1.05);
+        }
+    }
+</style>
+
+@code {
+    private string s1, s2, s3, s4;
+    private bool useAdd = true; private bool useSub = true; private bool useMul = true; private bool useDiv = true;
+    private bool allowParens = true;
+    private List<string> solucoesExibidas;
+    private bool buscou = false;
+    private string ultimoCopiado = null;
+
+    private void Calcular()
+    {
+        buscou = false; solucoesExibidas = null; ultimoCopiado = null;
+        double n1 = string.IsNullOrEmpty(s1) ? 0 : double.Parse(s1);
+        double n2 = string.IsNullOrEmpty(s2) ? 0 : double.Parse(s2);
+        double n3 = string.IsNullOrEmpty(s3) ? 0 : double.Parse(s3);
+        double n4 = string.IsNullOrEmpty(s4) ? 0 : double.Parse(s4);
+        var todasSolucoes = Solver.Solve(n1, n2, n3, n4, useAdd, useSub, useMul, useDiv);
+        solucoesExibidas = !allowParens ? todasSolucoes.Where(s => !s.Contains("(")).ToList() : todasSolucoes;
+        buscou = true;
+    }
+
+    private async Task CopiarParaClipboard(string texto)
+    {
+        await JS.InvokeVoidAsync("copiarTexto", texto);
+        ultimoCopiado = texto;
+        StateHasChanged();
+        await Task.Delay(1500);
+        if (ultimoCopiado == texto)
+        {
+            ultimoCopiado = null;
+            StateHasChanged();
+        }
+    }
+}
