@@ -126,7 +126,7 @@ public class Main {
     /* --- LÓGICA MATEMÁTICA --- */
 
     //Faz as contas e protege contra divisão por zero
-    private static double operar(double a, double b, Op op) {
+    static double operar(double a, double b, Op op) {
         switch (op) {
             case ADD: return a + b;
             case SUB: return a - b;
@@ -140,7 +140,7 @@ public class Main {
     }
 
     //Verifica se é 10.
-    private static boolean is10(double val) {
+    static boolean is10(double val) {
         //Se ele for beeeem próximo de 10. Trata o erro de ponto flutuante.
         return Math.abs(val - 10.0) < 0.000001;
     }
@@ -150,7 +150,7 @@ public class Main {
     // Verifica se "opDentro" precisa de parênteses quando está dentro de "opFora"
     // Ex: (4+5)*2 -> SIM (+ é mais fraco que *)
     // Ex: (4*5)+2 -> não (* é forte, não precisa proteger)
-    private static boolean precisaParenteses(Op opDentro, Op opFora, boolean isDireita) {
+    static boolean precisaParenteses(Op opDentro, Op opFora, boolean isDireita) {
         //Força Multiplicação/Divisão ganhar de Soma/Subtração
         boolean dentroFraco = (opDentro == Op.ADD || opDentro == Op.SUB);
         boolean foraForte = (opFora == Op.MUL || opFora == Op.DIV);
@@ -174,7 +174,7 @@ public class Main {
     }
 
     // Formata: ((A op1) op2 C) op3 D
-    private static String formatarEsquerda(double a, double b,
+    static String formatarEsquerda(double a, double b,
                                            double c, double  d,
                                            Op o1, Op o2, Op o3) {
         // Verifica lógica antes de montar
@@ -196,7 +196,7 @@ public class Main {
     }
 
     // Formata: A op1 (B op2 C) op3 D
-    private static String formatarMeio(double a, double b,
+    static String formatarMeio(double a, double b,
                                        double c, double d,
                                        Op o1, Op o2, Op o3) {
         // O grupo do meio (B op2 C) interage com DOIS operadores:
@@ -226,7 +226,7 @@ public class Main {
     }
 
     // Formata: A op1 B op2 (C op3 D)
-    private static String formatarDireita(double a, double b,
+    static String formatarDireita(double a, double b,
                                           double c, double d,
                                           Op o1, Op o2, Op o3) {
         boolean pFim = precisaParenteses(o3, o2, true);
@@ -248,7 +248,7 @@ public class Main {
     }
 
     /* --- PERMUTAÇÃO --- */
-    private static void permutar(int[] arr, int n, Set<List<Integer>> unicos) {
+    static void permutar(int[] arr, int n, Set<List<Integer>> unicos) {
         if (n == 1) {
             List<Integer> l = new ArrayList<>();
             for(int i : arr) l.add(i);
