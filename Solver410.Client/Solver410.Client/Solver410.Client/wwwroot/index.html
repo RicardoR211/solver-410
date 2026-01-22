@@ -4,14 +4,13 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Solver410.Client</title>
+    <title>Solver 4=10 - Fast Solution</title>
+    <meta name="description" content="Find all solutions for the 4=10 game instantly. Soluções rápidas e grátis para o jogo 4=10." />
     <base href="/" />
-    <link rel="preload" id="webassembly" />
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="Solver410.Client.styles.css" rel="stylesheet" />
-    <script type="importmap"></script>
 </head>
 
 <body>
@@ -28,10 +27,16 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
-    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+
+    <script src="_framework/blazor.webassembly.js"></script>
+
     <script>
         window.copiarTexto = (texto) => {
-            navigator.clipboard.writeText(texto);
+            navigator.clipboard.writeText(texto).then(() => {
+                console.log("Copiado!");
+            }).catch(err => {
+                console.error("Erro ao copiar: ", err);
+            });
         };
     </script>
 </body>
